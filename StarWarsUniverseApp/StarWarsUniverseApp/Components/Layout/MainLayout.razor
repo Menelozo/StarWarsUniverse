@@ -1,0 +1,65 @@
+﻿@inherits LayoutComponentBase
+@inject IJSRuntime JSRuntime
+@inject ThemeService ThemeService
+
+<RadzenLayout>
+    <RadzenHeader class="rz-background-color-black">
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0">
+            <RadzenSidebarToggle Click="@(() => sidebarExpanded = !sidebarExpanded)" />
+            <RadzenLink Path="/" class="rz-color-white rz-font-weight-bold" style="font-size: 1.5rem; margin-bottom: 0;">
+                Star Wars Universe
+            </RadzenLink>
+        </RadzenStack>
+    </RadzenHeader>
+
+    <RadzenSidebar @bind-Expanded="@sidebarExpanded" class="rz-background-color-base-900 rz-border-color-black">
+        <RadzenPanelMenu class="rz-background-color-base-900">
+            <RadzenPanelMenuItem Text="Home" Icon="home" Path="/" class="rz-background-color-base-800" Click="@OnItemClick" />
+            <RadzenPanelMenuItem Text="Films" Icon="movie" Path="films" class="rz-background-color-base-800" Click="@OnItemClick" />
+            <RadzenPanelMenuItem Text="Characters" Icon="person" Path="people" class="rz-background-color-base-800" Click="@OnItemClick" />
+        </RadzenPanelMenu>
+    </RadzenSidebar>
+
+    <RadzenBody>
+        <div onclick="@OnBodyClick">
+            @Body
+        </div>
+    </RadzenBody>
+
+    <RadzenFooter class="rz-background-color-black">
+        <div class="rz-p-4">
+            &copy; 2024 Star Wars Universe
+        </div>
+    </RadzenFooter>
+</RadzenLayout>
+
+<div id="blazor-error-ui">
+    An unhandled error has occurred.
+    <a href="" class="reload">Reload</a>
+    <a class="dismiss">🗙</a>
+</div>
+
+@code {
+    bool sidebarExpanded = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ThemeService.SetTheme("Dark");
+    }
+
+    private async Task OnItemClick()
+    {
+        if (await JSRuntime.InvokeAsync<bool>("isSmallScreen"))
+        {
+            sidebarExpanded = false;
+        }
+    }
+
+    private async Task OnBodyClick()
+    {
+        if (await JSRuntime.InvokeAsync<bool>("isSmallScreen"))
+        {
+            sidebarExpanded = false;
+        }
+    }
+}

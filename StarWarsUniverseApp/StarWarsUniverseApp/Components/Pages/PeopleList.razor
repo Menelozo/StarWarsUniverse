@@ -1,0 +1,54 @@
+﻿@page "/people"
+@inject StarWarsFilmService FilmService
+
+<PageTitle>Star Wars Characters</PageTitle>
+
+<RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" Gap="2rem">
+    <RadzenText TextStyle="TextStyle.H3" class="rz-color-warning rz-p-2" style="text-align: center;">
+        Star Wars Characters
+    </RadzenText>
+
+    @if (people == null)
+    {
+        <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Warning" Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+    }
+    else
+    {
+            <RadzenDataGrid Data="@people"
+                            TItem="People"
+                            AllowPaging="true"
+                            PageSize="10"
+                            PagerHorizontalAlign="HorizontalAlign.Left"
+                            ShowPagingSummary="true"
+                            AllowFiltering="true"
+                            FilterMode="FilterMode.Simple"
+                            FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                            AllowSorting="true"
+                            AllowColumnResize="true"
+                            AllowAlternatingRows="true"
+                            Style="max-width: 400px;">
+                <Columns>
+                <RadzenDataGridColumn TItem="People" Property="name" Title="Name" Filterable="true">
+                        <Template Context="person">
+                        <a class="rz-color-warning" href="/people/@(person.url.TrimEnd('/').Split('/').Last())">@person.name</a>
+                        </Template>
+                    </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="People" Property="films" Title="Films" Filterable="false">
+                        <Template Context="person">
+                            @person.films.Count()
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+    }
+</RadzenStack>
+
+@code {
+    private IEnumerable<People>? people;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Yield();
+        people = await FilmService.GetAllPeopleAsync();
+    }
+}

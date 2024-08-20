@@ -1,0 +1,99 @@
+﻿@page "/films/{id:int}"
+@inject StarWarsFilmService FilmService
+
+<PageTitle>@pageTitle</PageTitle>
+
+<RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" Gap="1rem" class="rz-p-4">
+    @if (film == null)
+    {
+        <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Warning" Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+    }
+    else
+    {
+        <RadzenCard Variant="Variant.Outlined" class="rz-border-color-warning" Style="width: 100%; max-width: 600px;">
+            <RadzenStack Gap="1rem">
+                <RadzenRow>
+                    <RadzenColumn Size="12" class="rz-wrap-title">
+                        <h3 class="rz-mb-0 rz-color-warning">@film.title</h3>
+                        <div class="rz-color-warning"><strong>Director:</strong> @film.director</div>
+                        <div class="rz-color-warning"><strong>Release Date:</strong> @film.release_date</div>
+                        <div class="rz-color-warning"><strong>Episode:</strong> @film.episode_id</div>
+                    </RadzenColumn>
+                </RadzenRow>
+
+                <hr style="border: none; background-color: var(--rz-base-600); height: 1px; margin: 0;" />
+
+                <RadzenText TextStyle="TextStyle.Body1" class="rz-color-warning">
+                    <strong>Opening Crawl:</strong> @film.opening_crawl
+                </RadzenText>
+
+                <hr style="border: none; background-color: var(--rz-base-600); height: 1px; margin: 0;" />
+
+                <RadzenText TextStyle="TextStyle.H5" class="rz-color-warning">
+                    Characters
+                </RadzenText>
+
+                @if (!charactersLoaded)
+                {
+                    <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Warning" Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small"/>
+                }
+                else
+                {
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="0.5rem">
+                        @foreach (var character in characterItems)
+                        {
+                            <li style="padding-left: 10px;">
+                                <a class="rz-color-warning" href="@($"/people/{character.Id}")">@character.Name</a>
+                            </li>
+                        }
+                    </RadzenStack>
+                }
+            </RadzenStack>
+        </RadzenCard>
+    }
+</RadzenStack>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private Film? film;
+    private List<CharacterItem> characterItems = new();
+    private bool charactersLoaded = false;
+    private string pageTitle = "Star Wars Films";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Yield();
+
+        film = await FilmService.GetFilmByIdAsync(Id.ToString());
+        pageTitle = film != null ? $"{film.title}" : pageTitle;
+
+        StateHasChanged();
+
+        if (film != null && film.characters != null)
+        {
+            await LoadCharacterItemsAsync(film.characters);
+        }
+    }
+
+    private async Task LoadCharacterItemsAsync(IEnumerable<string> characterUrls)
+    {
+        var tasks = characterUrls.Select(async characterUrl =>
+        {
+            var characterId = characterUrl.Split('/').Last(x => !string.IsNullOrEmpty(x));
+            var name = await GetCharacterName(characterUrl);
+            return new CharacterItem { Id = characterId, Name = name };
+        });
+
+        characterItems = (await Task.WhenAll(tasks)).ToList();
+        charactersLoaded = true;
+    }
+
+    private async Task<string> GetCharacterName(string characterUrl)
+    {
+        var characterId = characterUrl.Split('/').Last(x => !string.IsNullOrEmpty(x));
+        var character = await FilmService.GetPeopleByIdAsync(characterId);
+        return character.name;
+    }
+}

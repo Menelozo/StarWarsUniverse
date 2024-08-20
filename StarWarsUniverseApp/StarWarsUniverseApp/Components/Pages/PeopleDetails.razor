@@ -1,0 +1,107 @@
+﻿@page "/people/{id}"
+@inject StarWarsFilmService FilmService
+
+<PageTitle>@pageTitle</PageTitle>
+
+<RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" Gap="1rem" class="rz-p-4">
+    @if (person == null)
+    {
+        <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Warning" Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+    }
+    else
+    {
+        <RadzenCard Variant="Variant.Outlined" class="rz-border-color-warning" Style="width: 100%; max-width: 600px;">
+            <RadzenStack Gap="1rem">
+
+                <RadzenText TextStyle="TextStyle.Body1" class="rz-color-warning">
+                    <h3 class="rz-mb-0 rz-color-warning rz-wrap-title">@person.name</h3>
+                </RadzenText>
+
+                <hr style="border: none; background-color: var(--rz-base-600); height: 1px; margin: 0;" />
+
+                <RadzenRow>
+                    <RadzenColumn Size="12" class="rz-text-truncate">
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem">
+                            <RadzenStack Gap="0.25rem">
+                                <div class="rz-color-warning"><strong>Height:</strong> @person.height</div>
+                                <div class="rz-color-warning"><strong>Mass:</strong> @person.mass</div>
+                                <div class="rz-color-warning"><strong>Hair Color:</strong> @person.hair_color</div>
+                                <div class="rz-color-warning"><strong>Skin Color:</strong> @person.skin_color</div>
+                                <div class="rz-color-warning"><strong>Eye Color:</strong> @person.eye_color</div>
+                                <div class="rz-color-warning"><strong>Birth Year:</strong> @person.birth_year</div>
+                                <div class="rz-color-warning"><strong>Gender:</strong> @person.gender</div>
+                            </RadzenStack>
+                        </RadzenStack>
+                    </RadzenColumn>
+                </RadzenRow>
+
+                <hr style="border: none; background-color: var(--rz-base-600); height: 1px; margin: 0;" />
+
+                <RadzenText TextStyle="TextStyle.H5" class="rz-color-warning">
+                    Films
+                </RadzenText>
+                
+                @if (!filmsLoaded)
+                {
+                    <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Warning" Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small"/>
+                }
+                else
+                {
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="0.5rem">
+                        @foreach (var film in filmItems)
+                        {
+                            <li style="padding-left: 10px;">
+                                <a class="rz-color-warning" href="@($"/films/{film.Id}")">@film.Title</a>
+                            </li>
+                        }
+                    </RadzenStack>
+                }
+            </RadzenStack>
+        </RadzenCard>
+    }
+</RadzenStack>
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    private People? person;
+    private List<FilmItem> filmItems = new();
+    private bool filmsLoaded = false;
+    private string pageTitle = "Star Wars Character Details";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Yield();
+
+        person = await FilmService.GetPeopleByIdAsync(Id);
+        pageTitle = person != null ? $"{person.name}" : pageTitle;
+
+        StateHasChanged();
+
+        if (person != null && person.films != null)
+        {
+            await LoadFilmItemsAsync(person.films);
+        }
+    }
+
+    private async Task LoadFilmItemsAsync(IEnumerable<string> filmUrls)
+    {
+        var tasks = filmUrls.Select(async filmUrl =>
+        {
+            var filmId = filmUrl.Split('/').Last(x => !string.IsNullOrEmpty(x));
+            var title = await GetFilmTitle(filmUrl);
+            return new FilmItem { Id = filmId, Title = title };
+        });
+
+        filmItems = (await Task.WhenAll(tasks)).ToList();
+        filmsLoaded = true;
+    }
+
+    private async Task<string> GetFilmTitle(string filmUrl)
+    {
+        var filmId = filmUrl.Split('/').Last(x => !string.IsNullOrEmpty(x));
+        var film = await FilmService.GetFilmByIdAsync(filmId);
+        return film.title;
+    }
+}

@@ -1,0 +1,38 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.Components
+
+<PageTitle>Star Wars Universe</PageTitle>
+
+<RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" Gap="2rem" class="rz-p-4">
+    <RadzenText TextStyle="TextStyle.H1" class="rz-color-warning rz-p-2" style="text-align: center;">
+        Welcome to Star Wars Universe!
+    </RadzenText>
+
+    <RadzenText TextStyle="TextStyle.Body1" class="rz-color-warning rz-p-2" style="text-align: center;">
+        Database of Star Wars films and characters.
+    </RadzenText>
+
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" Gap="1rem">
+        <RadzenButton Text="View Films" Icon="movie" Style="min-width: 150px;" class="rz-background-color-warning rz-color-black" Click="NavigateToFilms" />
+        <RadzenButton Text="View Characters" Icon="person" Style="min-width: 150px;" class="rz-background-color-warning rz-color-black" Click="NavigateToPeople" />
+    </RadzenStack>
+
+    <RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" Gap="1rem">
+        <RadzenImage Path="images/logo.png" Style="width: 15rem;" AlternateText="Community" />
+    </RadzenStack>
+</RadzenStack>
+
+@code {
+    [Inject]
+    private NavigationManager NavigationManager { get; set; }
+
+    private void NavigateToPeople()
+    {
+        NavigationManager.NavigateTo("/people");
+    }
+
+    private void NavigateToFilms()
+    {
+        NavigationManager.NavigateTo("/films");
+    }
+}

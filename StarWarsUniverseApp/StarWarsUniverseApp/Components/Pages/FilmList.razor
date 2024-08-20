@@ -1,0 +1,68 @@
+﻿@page "/films"
+@inject StarWarsFilmService FilmService
+
+<PageTitle>Star Wars Films</PageTitle>
+
+<RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" Gap="2rem">
+    <RadzenText TextStyle="TextStyle.H3" class="rz-color-warning rz-p-2" style="text-align: center;">
+        Star Wars Films
+    </RadzenText>
+
+    @if (films == null)
+    {
+        <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Warning" Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+    }
+    else
+    {
+        <RadzenDataGrid Data="@films"
+                            TItem="Film"
+                            AllowPaging="true"
+                            PageSize="10"
+                            PagerHorizontalAlign="HorizontalAlign.Left"
+                            ShowPagingSummary="true"
+                            AllowFiltering="true"
+                            FilterMode="FilterMode.Simple"
+                            FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                            AllowSorting="true"
+                            AllowColumnResize="true"
+                            AllowAlternatingRows="true"
+                            Style="max-width: 600px;">
+                <Columns>
+                <RadzenDataGridColumn TItem="Film" Property="title" Title="Title" Filterable="true">
+                        <Template Context="film">
+                        <a class="rz-color-warning" style="white-space: pre-wrap;" href="/films/@film.episode_id">@film.title</a>
+                        </Template>
+                    </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="Film" Property="director" Title="Director">
+                        <Template Context="film">
+                            <span style="white-space: pre-wrap;">@film.director</span>
+                        </Template>
+                    </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="Film" Property="release_date" Title="Release Date">
+                        <Template Context="film">
+                            <span style="white-space: pre-wrap;">@GetReleaseYear(film.release_date)</span>
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+    }
+</RadzenStack>
+
+@code {
+    private IEnumerable<Film> films;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Yield();
+        films = await FilmService.GetAllFilmsAsync();
+    }
+
+    private string GetReleaseYear(string releaseDate)
+    {
+        if (DateTime.TryParse(releaseDate, out var date))
+        {
+            return date.Year.ToString();
+        }
+        return "Unknown";
+    }
+}
